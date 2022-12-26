@@ -1,7 +1,7 @@
 use rand::{seq::SliceRandom, thread_rng};
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 enum Suit {
     Diamonds,
     Clubs,
@@ -15,7 +15,7 @@ impl fmt::Display for Suit {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 enum Rank {
     Ace,
     Two,
@@ -30,6 +30,7 @@ enum Rank {
     Jack,
     Queen,
     King,
+    Joker,
 }
 
 impl fmt::Display for Rank {
@@ -41,41 +42,11 @@ impl fmt::Display for Rank {
 pub struct Card {
     rank: Rank,
     suit: Suit,
-    value: u8,
 }
 
 impl Card {
-    fn new(rank: u8, suit: &str) -> Card {
-        let value = rank;
-
-        let rank = match rank {
-            1 => Rank::Ace,
-            2 => Rank::Two,
-            3 => Rank::Three,
-            4 => Rank::Four,
-            5 => Rank::Five,
-            6 => Rank::Six,
-            7 => Rank::Seven,
-            8 => Rank::Eight,
-            9 => Rank::Nine,
-            10 => Rank::Ten,
-            11 => Rank::Jack,
-            12 => Rank::Queen,
-            13 => Rank::King,
-            _ => Rank::Ace,
-        };
-
-        let suit = suit.to_lowercase();
-
-        let suit = match &suit[..] {
-            "diamonds" => Suit::Diamonds,
-            "clubs" => Suit::Clubs,
-            "hearts" => Suit::Hearts,
-            "spades" => Suit::Spades,
-            _ => Suit::Hearts,
-        };
-
-        Card { rank, suit, value }
+    fn new(rank: Rank, suit: Suit) -> Card {
+        Card { rank, suit }
     }
 }
 
@@ -92,10 +63,18 @@ pub struct Deck {
 impl Deck {
     pub fn new() -> Deck {
         let mut cards = Vec::with_capacity(52);
-        let suits = ["Diamonds", "Clubs", "Hearts", "Spades"];
-        for i in 1..14 {
+        let ranks = [
+            Rank::Ace, Rank::Two, Rank::Three,
+            Rank::Four, Rank::Five, Rank::Six,
+            Rank::Seven, Rank::Eight, Rank::Nine,
+            Rank::Ten, Rank::Jack, Rank::Queen,
+            Rank::King];
+
+        let suits = [Suit::Diamonds, Suit::Clubs, Suit::Hearts, Suit::Spades];
+
+        for rank in ranks.iter() {
             for suit in suits.iter() {
-                cards.push(Card::new(i, suit));
+                cards.push(Card::new(rank.clone(), suit.clone()));
             }
         }
 
@@ -114,8 +93,41 @@ impl Deck {
             return Card {
                 rank: Rank::Ace,
                 suit: Suit::Spades,
-                value: 1,
             };
         }
+    }
+}
+
+pub struct Player {
+    hand: Vec<Card>,
+}
+
+impl Player {
+    pub fn new() -> Player {
+        Player { hand: Vec::new() }
+    }
+    
+    pub fn add(&mut self, card: Card) {
+        self.hand.push(card);
+    }
+
+    pub fn calculate_hand(&self) -> u8 {
+        let values: Vec<u8> = self.hand.iter().map(|card| match card.rank {
+              Rank::Two => 2,
+              Rank::Three => 3,
+              Rank::Four => 4,
+              Rank::Five => 5,
+              Rank::Six => 6,
+              Rank::Seven => 7,
+              Rank::Eight => 9,
+              Rank::Ten => 10,
+              Rank::Jack => 10,
+              Rank::Queen => 10,
+              Rank::King => 10,
+              Rank::Ace => 11,
+              _ => 11,
+        }).collect();
+        
+        values.iter().sum::<u8>()
     }
 }

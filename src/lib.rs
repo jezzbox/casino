@@ -1,7 +1,12 @@
 use rand::{seq::SliceRandom, thread_rng};
 use std::fmt;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
-#[derive(Debug, Clone, Copy)]
+pub trait Value {
+    fn value(&self) -> u8;
+}
+#[derive(Debug, Clone, Copy, EnumIter, PartialEq)]
 enum Suit {
     Diamonds,
     Clubs,
@@ -15,7 +20,7 @@ impl fmt::Display for Suit {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, EnumIter, PartialEq)]
 enum Rank {
     Ace,
     Two,
@@ -50,6 +55,27 @@ impl Card {
     }
 }
 
+impl Value for Card {
+    fn value(&self) -> u8 {
+        match self.rank {
+            Rank::Two => 2,
+            Rank::Three => 3,
+            Rank::Four => 4,
+            Rank::Five => 5,
+            Rank::Six => 6,
+            Rank::Seven => 7,
+            Rank::Eight => 8,
+            Rank::Nine => 9,
+            Rank::Ten => 10,
+            Rank::Jack => 10,
+            Rank::Queen => 10,
+            Rank::King => 10,
+            Rank::Ace => 11,
+            _ => 11,
+        }
+    }
+}
+
 impl fmt::Display for Card {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} of {}", self.rank, self.suit)
@@ -63,18 +89,10 @@ pub struct Deck {
 impl Deck {
     pub fn new() -> Deck {
         let mut cards = Vec::with_capacity(52);
-        let ranks = [
-            Rank::Ace, Rank::Two, Rank::Three,
-            Rank::Four, Rank::Five, Rank::Six,
-            Rank::Seven, Rank::Eight, Rank::Nine,
-            Rank::Ten, Rank::Jack, Rank::Queen,
-            Rank::King];
 
-        let suits = [Suit::Diamonds, Suit::Clubs, Suit::Hearts, Suit::Spades];
-
-        for rank in ranks.iter() {
-            for suit in suits.iter() {
-                cards.push(Card::new(rank.clone(), suit.clone()));
+        for rank in Rank::iter().filter(|&x| x != Rank::Joker) {
+            for suit in Suit::iter() {
+                cards.push(Card::new(rank, suit));
             }
         }
 
@@ -88,46 +106,49 @@ impl Deck {
     pub fn draw(&mut self) -> Card {
         if let Some(card) = self.cards.pop() {
             println!("drawn card is: {}", card);
-            return card;
+            card
         } else {
-            return Card {
+            Card {
                 rank: Rank::Ace,
                 suit: Suit::Spades,
-            };
+            }
+        }
+    }
+}
+
+pub struct BlackJack {
+    players: Vec<Player>,
+    dealer: Player,
+    deck: Deck,
+}
+
+impl BlackJack {
+    fn new(players: Vec<Player>, dealer: Player, deck: Deck) -> BlackJack {
+        BlackJack {
+            players,
+            dealer,
+            deck,
         }
     }
 }
 
 pub struct Player {
+    name: String,
     hand: Vec<Card>,
 }
 
 impl Player {
-    pub fn new() -> Player {
-        Player { hand: Vec::new() }
+    pub fn new(name: &str, hand: Vec<Card>) -> Player {
+        Player { name, hand }
     }
-    
+
     pub fn add(&mut self, card: Card) {
         self.hand.push(card);
     }
 
     pub fn calculate_hand(&self) -> u8 {
-        let values: Vec<u8> = self.hand.iter().map(|card| match card.rank {
-              Rank::Two => 2,
-              Rank::Three => 3,
-              Rank::Four => 4,
-              Rank::Five => 5,
-              Rank::Six => 6,
-              Rank::Seven => 7,
-              Rank::Eight => 9,
-              Rank::Ten => 10,
-              Rank::Jack => 10,
-              Rank::Queen => 10,
-              Rank::King => 10,
-              Rank::Ace => 11,
-              _ => 11,
-        }).collect();
-        
+        let values: Vec<u8> = self.hand.iter().map(|card| card.value()).collect();
+
         values.iter().sum::<u8>()
     }
 }

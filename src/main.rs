@@ -1,21 +1,40 @@
-use casino::{Deck, Player, Value};
+use casino::{games::blackjack, players};
+
 
 fn main() {
-    let mut player = Player::new();
-    let mut dealer = Player::new();
+    println!("Welcome to blackjack");
 
-    let mut deck = Deck::new();
-    deck.shuffle();
+    // let mut players = blackjack::setup_players();
+    let mut player = players::Player::new("jez", 500f64);
+    let mut round = blackjack::Round::new();
+    round.take_bet(&mut player, 50f64);
+    round.play();
+    player.print_money();
+//    println!("{}", player.money);
 
-    let card = deck.draw();
-    player.add(card);
-    let card2 = deck.draw();
-    player.add(card2);
+    // for player in players.iter_mut() {
+    //     dealer.add_player(player);
+    // }
 
-    dealer.add(deck.draw());
-    let card4 = deck.draw();
-    println!("the dealers faceup card is: {}", card4.value());
-    dealer.add(card4);
+    // dealer.deal();
 
-    println!("Value of hand is: {}", player.calculate_hand());
+    // for player in dealer.players {
+    //     println!("Welcome {}", player.name);
+    //     player.play_turn(&mut dealer);
+    // }
+
+    // println!("Dealer's hand: ");
+    // dealer.hand.print_hand();
+    // dealer.play_turn();
+
+    // for player in players.iter() {
+    //     println!("{} results: ", player.name);
+    //     for hand in player.hand.iter() {
+    //         hand.reveal_cards();
+    //         hand.print_result(&dealer)
+
+    //     }
+    // }
+    
 }
+    
